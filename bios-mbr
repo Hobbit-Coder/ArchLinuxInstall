@@ -1,0 +1,69 @@
+loadkeys la-latin1
+timedatectl set-ntp true
+
+cfdisk
+sda1 512MB EFI
+sda2 16GB  SWAP
+sda3 *     Linux boot
+
+lsblk
+mkfs.fat -F32 /dev/sda1
+mkswap /dev/sda2
+swapon /dev/sda2
+mkfs.btrfs /dev/sda3
+
+mount /dev/sda3 /mnt
+
+ls 
+ls /
+mkdir /mnt/boot
+mkdir /mnt/boot/efi
+mount /dev/sda1 /mnt/boot/efi
+nano /etc/pacman.d/mirrorlist
+
+pacstrap /mnt base base-devel linux linux-firmware nano
+genfstab -U  /mnt >> /mnt/etc/fstab
+nano /mnt/etc/fstab
+
+arch-chroot /mnt
+
+ln -sf /usr/share/zoneinfo/America/Bogota /etc/localtime
+hwclock --systohc
+nano /etc/locale.gen          - - - - - - - - - es_CO.UTF-8 UTF-8
+                                       
+echo LANG=es_CO.UTF-8 UTF-8 > /etc/locale.conf
+echo KEYMAP=la-latin1 > /etc/vconsole.conf
+echo 'hostname' > /etc/hostname
+
+
+nano /etc/hosts
+
+127.0.0.1            localhost
+::1                  localhost
+127.0.0.1            Archlinux.localdomain    Archlinux
+
+
+
+pacman -S networkmanager
+systemctl enable NetworkManager
+systemctl start NetworkManager
+
+passwd 
+useradd -m 'username'
+passwd 'username'
+pacman -S grub efibootmgr
+grub--install /dev/sda
+grub-mkconfig -o /boot/grub/grub.cfg
+unmount -R /mnt                                        
+exit
+reboot
+
+#wifi
+nmclidev wifi connect 'WifiName' password 'wifipassword'
+
+setxkbmap -layout latam
+locale -a
+locale-gen
+locale -a /etc/locale.gen
+locale-gen
+
